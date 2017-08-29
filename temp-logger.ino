@@ -212,4 +212,17 @@ float tempC = sensors.getTempC(deviceAddress);
    }
 }// End printTemperature
 
+void writeTemperature(DeviceAddress deviceAddress)
+{
+
+float tempC = sensors.getTempC(deviceAddress);
+char tempString[8]; // Buffer big enough for 7-character float
+  dtostrf(tempC, 7, 3, tempString); // Leave room for too large numbers!
+
+  String(tempString).trim();
+
+  logfile.println(tempString);
+
+}// End writeTemperature
+
 //*********( THE END )***********
