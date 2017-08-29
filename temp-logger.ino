@@ -79,7 +79,7 @@ void setup() {
     Serial.println("Opened logfile");
     
     // Write header
-    logfile.println("year, month, day, hour, minute, second, temperature");
+    logfile.println("year, month, day, hour, minute, second, probe, temperature");
     logfile.close();
   }
 
