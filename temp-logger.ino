@@ -61,6 +61,7 @@ void setup() {
   int day = now.day();
   sprintf(filename, "%d%d%d.csv", year, month, day);
 
+  // I have no idea why this line makes shit work :|
   if (SD.exists(filename)) { Serial.println("File exists!");}
   
   if (!SD.exists(filename)) {
