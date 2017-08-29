@@ -111,9 +111,6 @@ void loop() {
     printTemperature(Probe02);
     Serial.println();
 
-    // read first sensor
-    float temp1 = sensors.getTempCByIndex(0);  // you can have more than one DS18B20 on the same bus.
-
     // Print some times
     DateTime now = rtc.now();
 
@@ -125,10 +122,8 @@ void loop() {
     int second = now.second();
 
     // make a string for assembling the data to log:
-  
-
-    String dataString = String(year) + ", " + String(month) + ", " + String(day) + ", " + String(hour) + ", " + String(minute) + ", " + String(second) + ", " + String(temp1);
-
+    String dataString = String(year) + ", " + String(month) + ", " + String(day) + ", " + String(hour) + ", " + String(minute) + ", " + String(second) + ", ";
+    
     // Get ready to write to SD card
     //sprintf(filename, "%d%d%d.csv", year, month, day);
     logfile = SD.open(filename, FILE_WRITE);  // open file for writing
@@ -139,24 +134,18 @@ void loop() {
       Serial.print(filename);
       Serial.println(" file opened for writing");
       
-      logfile.print(year);
-      logfile.print(",");
-      logfile.print(month);
-      logfile.print(",");
-      logfile.print(day);
-      logfile.print(",");
-      logfile.print(hour);
-      logfile.print(",");
-      logfile.print(minute);
-      logfile.print(",");
-      logfile.print(second);
-      logfile.print(",");
-      logfile.println(temp1);
+      logfile.print(dataString);
+      logfile.print("Probe 01, ");
+      writeTemperature(Probe01);
+      logfile.print(dataString);
+      logfile.print("Probe 02, ");
+      writeTemperature(Probe02);
       logfile.close();
 
-      Serial.println("inside if logfile loop in void loop");
-
-      Serial.println(dataString);
+      Serial.println("Data string for writing: ");
+      Serial.print(dataString);
+      printTemperature(Probe01);
+      Serial.println();
 
     } else {  // if not, show an error
       Serial.print("Error: not able to open ");
