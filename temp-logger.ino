@@ -158,8 +158,9 @@ void loop() {
 
     lcd.setCursor(0,0); //Start at character 0 on line 0
     lcd.print("Hello World");
-    Serial.println("T1: ");
-    //displayTemperature(Probe01);  
+
+    lcd.setCursor(0, 1);
+    displayTemperature(Probe01);  
   
     //lcd.setCursor(0,1); //Start at character 0 on line 1
     //lcd.print("T2: ");
