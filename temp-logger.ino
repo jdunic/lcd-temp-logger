@@ -106,6 +106,10 @@ void loop() {
     printTemperature(Probe02);
     Serial.println();
 
+    Serial.print("Probe 03 temperature is:   ");
+    printTemperature(Probe03);
+    Serial.println();
+
     // make a string for assembling the data to log:
     DateTime now = rtc.now();
 
@@ -123,6 +127,8 @@ void loop() {
       writeTemperature(logfile, 1, Probe01);
       logfile.print(dateTimeString);
       writeTemperature(logfile, 2, Probe02);
+      logfile.print(dateTimeString);
+      writeTemperature(logfile, 3, Probe02);
       logfile.close();
 
       Serial.println("Data string for writing: ");
