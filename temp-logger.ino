@@ -4,14 +4,11 @@
 #include <OneWire.h>
 #include <RTClib.h>
 #include "DallasTemperature.h"
-#include "LiquidCrystal.h"
+#include <LiquidCrystal.h>
 
-File logfile;
 RTC_PCF8523 rtc;
 // library functions won't work to set SD pin
-int sdCardPin = 10;
-char filename[16] = {'\0'};
-float temp1;
+int sdCardPin = 10;      
 LiquidCrystal lcd(6, 7, 8, 9, 11, 12); // Creates an LC object. Parameters: (rs, enable, d4, d5, d6, d7) 
 
 #define ONE_WIRE_BUS 2
@@ -32,11 +29,12 @@ void setup() {
   pinMode(sdCardPin, OUTPUT);
 
   while (!Serial) {
-    delay(1000);  // for Leonardo/Micro/Zero
+    delay(2000);  // for Leonardo/Micro/Zero
   }
   
   Serial.begin(9600);
 
+  Serial.println("--- SETUP BEGIN ---");
   // RTC error checks
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -55,21 +53,10 @@ void setup() {
   }
 
   // Attempting variable file name
-  DateTime now = rtc.now();
-  int year = now.year();
-  int month = now.month();
-  int day = now.day();
-  sprintf(filename, "%d%d%d.csv", year, month, day);
+  File logfile;
+  char filename[16];
+  getFilename(filename);
 
-  // I have no idea why this line makes shit work :|
-  if (SD.exists(filename)) { Serial.println("File exists!");}
-  
-  if (!SD.exists(filename)) {
-    // only open a new file if it doesn't exist
-    logfile = SD.open(filename, FILE_WRITE);
-    Serial.print(filename);
-    Serial.println(' - New file created');
-  }
   logfile = SD.open(filename, FILE_WRITE);  // open file for writing
 
   if (logfile) {
@@ -87,14 +74,20 @@ void setup() {
   sensors.begin();
 
   lcd.begin(16, 2); // Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display
-
+  
+  Serial.println("--- SETUP END ---");
 }
 
 
 void loop() {
-    // Get temperature organised
     delay(1000);
-    Serial.println();
+
+    File logfile;
+    char filename[16];
+
+    getFilename(filename);
+
+    Serial.println("---");
     Serial.print("Number of Devices found on bus = ");
     Serial.println(sensors.getDeviceCount());
     Serial.print("Getting temperatures... ");
@@ -111,39 +104,27 @@ void loop() {
     printTemperature(Probe02);
     Serial.println();
 
-    // Print some times
+    // make a string for assembling the data to log:
     DateTime now = rtc.now();
 
-    int year = now.year();
-    int month = now.month();
-    int day = now.day();
-    int hour = now.hour();
-    int minute = now.minute();
-    int second = now.second();
-
-    // make a string for assembling the data to log:
-    String dataString = String(year) + ", " + String(month) + ", " + String(day) + ", " + String(hour) + ", " + String(minute) + ", " + String(second) + ", ";
+    char dateTimeString[14];
+    sprintf(dateTimeString, "%d,%d,%d,%d,%d,%d,", 
+            now.year(), now.month(), now.day(), now.hour(), now.minute(), 
+            now.second());
     
     // Get ready to write to SD card
     //sprintf(filename, "%d%d%d.csv", year, month, day);
     logfile = SD.open(filename, FILE_WRITE);  // open file for writing
-
-    Serial.println(filename);
     
     if (logfile) {  // if file can be opened, write to it
-      Serial.print(filename);
-      Serial.println(" file opened for writing");
-      
-      logfile.print(dataString);
-      logfile.print("Probe 01, ");
-      writeTemperature(Probe01);
-      logfile.print(dataString);
-      logfile.print("Probe 02, ");
-      writeTemperature(Probe02);
+      logfile.print(dateTimeString);
+      writeTemperature(logfile, 1, Probe01);
+      logfile.print(dateTimeString);
+      writeTemperature(logfile, 2, Probe02);
       logfile.close();
 
       Serial.println("Data string for writing: ");
-      Serial.print(dataString);
+      Serial.print(dateTimeString);
       printTemperature(Probe01);
       Serial.println();
 
@@ -151,8 +132,6 @@ void loop() {
       Serial.print("Error: not able to open ");
       Serial.println(filename);
     }
-
-    Serial.println("end of loop test");
 
     // Print to LCD
 
@@ -167,52 +146,46 @@ void loop() {
     //displayTemperature(Probe02); 
 
     delay(2000);  // delay before next write to SD card, adjust as required
-
 }
 
 /*-----( Declare User-written Functions )-----*/
-void printTemperature(DeviceAddress deviceAddress)
-{
+void printTemperature(DeviceAddress deviceAddress) {
+  float tempC = sensors.getTempC(deviceAddress);
 
-float tempC = sensors.getTempC(deviceAddress);
-
-   if (tempC == -127.00) 
-   {
+  if (tempC == -127.00) {
    Serial.print("Error getting temperature  ");
-   } 
-   else
-   {
+  } else {
    Serial.print("C: ");
    Serial.print(tempC);
-   }
+  }
 }// End printTemperature
 
-void displayTemperature(DeviceAddress deviceAddress)
-{
-
-float tempC = sensors.getTempC(deviceAddress);
-
-   if (tempC == -127.00) // Measurement failed or no device found
-   {
+void displayTemperature(DeviceAddress deviceAddress) {
+  float tempC = sensors.getTempC(deviceAddress);
+   if (tempC == -127.00) { // Measurement failed or no device found
     lcd.print("Temperature Error");
-   } 
-   else
-   {
-   lcd.print(tempC);
+   } else {
+    lcd.print(tempC);
    }
 }// End printTemperature
 
-void writeTemperature(DeviceAddress deviceAddress)
-{
-
-float tempC = sensors.getTempC(deviceAddress);
-char tempString[8]; // Buffer big enough for 7-character float
+void writeTemperature(File logfile, int probeNumber, DeviceAddress deviceAddress) {
+  float tempC = sensors.getTempC(deviceAddress);
+  char tempString[8]; // Buffer big enough for 7-character float
   dtostrf(tempC, 7, 3, tempString); // Leave room for too large numbers!
 
   String(tempString).trim();
 
+  logfile.print("Probe ");
+  logfile.print(probeNumber);
+  logfile.print(",");
   logfile.println(tempString);
+} // End writeTemperature
 
-}// End writeTemperature
+void getFilename(char* filename) {
+  DateTime now = rtc.now();
+
+  sprintf(filename, "%d%d%d.csv", now.year(), now.month(), now.day());
+}
 
 //*********( THE END )***********
