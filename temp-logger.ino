@@ -33,8 +33,16 @@ void setup() {
   while (!Serial) {
     delay(2000);  // for Leonardo/Micro/Zero
   }
-  
+
   Serial.begin(9600);
+
+  // Set up SD card for writing
+  if (!SD.begin(sdCardPin)) {
+    Serial.println("initialization failed!");
+    return;
+  } else {
+    Serial.println("SD card initialized");
+  }
 
   Serial.println("--- SETUP BEGIN ---");
   // RTC error checks
@@ -44,14 +52,6 @@ void setup() {
   }
   if (! rtc.initialized()) {
     Serial.println("RTC is NOT running!");
-  }
-
-  // Set up SD card for writing
-  if (!SD.begin(sdCardPin)) {
-    Serial.println("initialization failed!");
-    return;
-  } else {
-    Serial.println("SD card initialized");
   }
 
   // Attempting variable file name
