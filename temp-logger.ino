@@ -1,11 +1,13 @@
 // See: https://arduino-info.wikispaces.com/MultipleTemperatureSensorsToLCD
 
-#include <SD.h>
+#include <SPI.h>
+#include "SdFat.h"
 #include <OneWire.h>
 #include <RTClib.h>
 #include "DallasTemperature.h"
 #include <LiquidCrystal.h>
 
+SdFat SD;
 RTC_PCF8523 rtc;
 // library functions won't work to set SD pin
 int sdCardPin = 10;      
@@ -23,6 +25,7 @@ DallasTemperature sensors(&oneWire);
 DeviceAddress Probe01 = { 0x28, 0x2B, 0x05, 0xA8, 0x08, 0x00, 0x00, 0x12 }; 
 DeviceAddress Probe02 = { 0x28, 0xFF, 0x65, 0xB5, 0x85, 0x16, 0x03, 0x68 };
 DeviceAddress Probe03 = { 0x28, 0x46, 0xE8, 0xA7, 0x08, 0x00, 0x00, 0x37 };
+DeviceAddress Probe04 = { 0x28, 0x88, 0xD2, 0xA7, 0x08, 0x00, 0x00, 0x82 };;
 
 
 void setup() {
@@ -110,6 +113,10 @@ void loop() {
     printTemperature(Probe03);
     Serial.println();
 
+    Serial.print("Probe 04 temperature is:   ");
+    printTemperature(Probe04);
+    Serial.println();
+
     // make a string for assembling the data to log:
     DateTime now = rtc.now();
 
@@ -128,7 +135,9 @@ void loop() {
       logfile.print(dateTimeString);
       writeTemperature(logfile, 2, Probe02);
       logfile.print(dateTimeString);
-      writeTemperature(logfile, 3, Probe02);
+      writeTemperature(logfile, 3, Probe03);
+      logfile.close();
+      writeTemperature(logfile, 4, Probe04);
       logfile.close();
 
       Serial.println("Data string for writing: ");
