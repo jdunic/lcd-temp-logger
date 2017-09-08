@@ -6,8 +6,8 @@
 #include <RTClib.h>
 #include "DallasTemperature.h"
 #include <LiquidCrystal.h>
-//#include "Wire.h"
-//#include "Adafruit_LiquidCrystal.h"
+#include "Wire.h"
+#include "Adafruit_LiquidCrystal.h"
 
 SdFat SD;
 RTC_PCF8523 rtc;
@@ -18,7 +18,7 @@ int sdCardPin = 10;
 #define ONE_WIRE_BUS 2
 
 // Connect via i2c, default address #0 (A0-A2 not jumpered)
-//Adafruit_LiquidCrystal lcd(0);
+Adafruit_LiquidCrystal lcd(0);
 
 // Setup a oneWire instance to communicate with any OneWire devices  
 // (not just Maxim/Dallas temperature ICs) 
@@ -36,7 +36,7 @@ DeviceAddress Probe04 = { 0x28, 0x88, 0xD2, 0xA7, 0x08, 0x00, 0x00, 0x82 };;
 void setup() {
 
   // set up the LCD's number of rows and columns: 
-  //lcd.begin(20, 4);
+  lcd.begin(20, 4);
 
   // light up LEDs
   pinMode(sdCardPin, OUTPUT);
@@ -49,20 +49,20 @@ void setup() {
 
   // Set up SD card for writing
   if (!SD.begin(sdCardPin)) {
-    Serial.println("initialization failed!");
+    Serial.println(F("initialization failed!"));
     return;
   } else {
-    Serial.println("SD card initialized");
+    Serial.println(F("SD card initialized"));
   }
 
-  Serial.println("--- SETUP BEGIN ---");
+  Serial.println(F("--- SETUP BEGIN ---"));
   // RTC error checks
   if (! rtc.begin()) {
-    Serial.println("Couldn't find RTC");
+    Serial.println(F("Couldn't find RTC"));
     while (1);
   }
   if (! rtc.initialized()) {
-    Serial.println("RTC is NOT running!");
+    Serial.println(F("RTC is NOT running!"));
   }
 
   // Attempting variable file name
@@ -73,20 +73,20 @@ void setup() {
   logfile = SD.open(filename, FILE_WRITE);  // open file for writing
 
   if (logfile) {
-    Serial.print("Logging to: ");
+    Serial.print(F("Logging to: "));
     Serial.println(filename);
 
-    Serial.println("Opened logfile");
+    Serial.println(F("Opened logfile"));
     
     // Write header
-    logfile.println("year, month, day, hour, minute, second, probe, temperature");
+    logfile.println(F("year, month, day, hour, minute, second, probe, temperature"));
     logfile.close();
   }
 
   // start up the sensor library
   sensors.begin();
   
-  Serial.println("--- SETUP END ---");
+  Serial.println(F("--- SETUP END ---"));
 }
 
 
@@ -98,36 +98,36 @@ void loop() {
 
     getFilename(filename);
 
-    Serial.println("---");
-    Serial.print("Number of Devices found on bus = ");
+    Serial.println(F("---"));
+    Serial.print(F("Number of Devices found on bus = "));
     Serial.println(sensors.getDeviceCount());
-    Serial.print("Getting temperatures... ");
+    Serial.print(F("Getting temperatures... "));
     Serial.println();
     
     // Command all devices on bus to read temperature
     sensors.requestTemperatures();  
 
-    Serial.print("Probe 01 temperature is:   ");
+    Serial.print(F("Probe 01 temperature is:   "));
     printTemperature(Probe01);
     Serial.println();
 
-    Serial.print("Probe 02 temperature is:   ");
+    Serial.print(F("Probe 02 temperature is:   "));
     printTemperature(Probe02);
     Serial.println();
 
-    Serial.print("Probe 03 temperature is:   ");
+    Serial.print(F("Probe 03 temperature is:   "));
     printTemperature(Probe03);
     Serial.println();
 
-    Serial.print("Probe 04 temperature is:   ");
+    Serial.print(F("Probe 04 temperature is:   "));
     printTemperature(Probe04);
     Serial.println();
 
     delay(1000);
 
     // Print to LCD
-    //lcd.setCursor(0, 0); //Start at character 0 on line 0
-    //lcd.print(F("T1: "));
+    lcd.setCursor(0, 0); //Start at character 0 on line 0
+    lcd.print(F("T1: "));
     //displayTemperature(Probe01); 
 
     //lcd.setCursor(10, 0); 
@@ -160,7 +160,7 @@ void loop() {
     //sprintf(filename, "%d%d%d.csv", year, month, day);
     logfile = SD.open(filename, FILE_WRITE);  // open file for writing
     
-    Serial.println("--- MID LOOP---");
+    Serial.println(F("--- MID LOOP---"));
 
     if (logfile) {  // if file can be opened, write to it
       logfile.print(dateTimeString);
@@ -173,13 +173,13 @@ void loop() {
       writeTemperature(logfile, 4, Probe04);
       logfile.close();
 
-      Serial.println("Data string for writing: ");
+      Serial.println(F("Data string for writing: "));
       Serial.print(dateTimeString);
       printTemperature(Probe01);
       Serial.println();
 
     } else {  // if not, show an error
-      Serial.print("Error: not able to open ");
+      Serial.print(F("Error: not able to open "));
       Serial.println(filename);
     }
 
@@ -191,9 +191,9 @@ void printTemperature(DeviceAddress deviceAddress) {
   float tempC = sensors.getTempC(deviceAddress);
 
   if (tempC == -127.00) {
-   Serial.print("Error getting temperature  ");
+   Serial.print(F("Error getting temperature  "));
   } else {
-   Serial.print("C: ");
+   Serial.print(F("C: "));
    Serial.print(tempC);
   }
 }// End printTemperature
@@ -216,9 +216,9 @@ void writeTemperature(File logfile, int probeNumber, DeviceAddress deviceAddress
 
   String(tempString).trim();
 
-  logfile.print("Probe ");
+  logfile.print(F("Probe "));
   logfile.print(probeNumber);
-  logfile.print(",");
+  logfile.print(F(","));
   logfile.println(tempString);
 } // End writeTemperature
 
