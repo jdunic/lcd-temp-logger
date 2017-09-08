@@ -6,14 +6,19 @@
 #include <RTClib.h>
 #include "DallasTemperature.h"
 #include <LiquidCrystal.h>
+//#include "Wire.h"
+//#include "Adafruit_LiquidCrystal.h"
 
 SdFat SD;
 RTC_PCF8523 rtc;
-// library functions won't work to set SD pin
+// Set sd card pin (10 is default on UNO with data logger shield)
 int sdCardPin = 10;      
-LiquidCrystal lcd(6, 7, 8, 9, 11, 12); // Creates an LC object. Parameters: (rs, enable, d4, d5, d6, d7) 
 
+// Temperature probe data pin
 #define ONE_WIRE_BUS 2
+
+// Connect via i2c, default address #0 (A0-A2 not jumpered)
+//Adafruit_LiquidCrystal lcd(0);
 
 // Setup a oneWire instance to communicate with any OneWire devices  
 // (not just Maxim/Dallas temperature ICs) 
@@ -29,6 +34,9 @@ DeviceAddress Probe04 = { 0x28, 0x88, 0xD2, 0xA7, 0x08, 0x00, 0x00, 0x82 };;
 
 
 void setup() {
+
+  // set up the LCD's number of rows and columns: 
+  //lcd.begin(20, 4);
 
   // light up LEDs
   pinMode(sdCardPin, OUTPUT);
@@ -77,8 +85,6 @@ void setup() {
 
   // start up the sensor library
   sensors.begin();
-
-  lcd.begin(16, 2); // Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display
   
   Serial.println("--- SETUP END ---");
 }
@@ -117,6 +123,29 @@ void loop() {
     printTemperature(Probe04);
     Serial.println();
 
+    delay(1000);
+
+    // Print to LCD
+    //lcd.setCursor(0, 0); //Start at character 0 on line 0
+    //lcd.print(F("T1: "));
+    //displayTemperature(Probe01); 
+
+    //lcd.setCursor(10, 0); 
+    //lcd.setCursor(0, 1); 
+    //lcd.print(F("T2: "));
+    //displayTemperature(Probe02); 
+
+    //lcd.setCursor(0, 2); 
+    //lcd.print(F("T3: "));
+    //displayTemperature(Probe03);
+  
+    //lcd.setCursor(0, 3); 
+    //lcd.print(F("T4: "));
+    //displayTemperature(Probe04); 
+
+    //lcd.setCursor(0,1); //Start at character 0 on line 1
+    //lcd.print("T2: ");
+
     // make a string for assembling the data to log:
     DateTime now = rtc.now();
 
@@ -125,10 +154,14 @@ void loop() {
             now.year(), now.month(), now.day(), now.hour(), now.minute(), 
             now.second());
     
+    delay(1000);
+    
     // Get ready to write to SD card
     //sprintf(filename, "%d%d%d.csv", year, month, day);
     logfile = SD.open(filename, FILE_WRITE);  // open file for writing
     
+    Serial.println("--- MID LOOP---");
+
     if (logfile) {  // if file can be opened, write to it
       logfile.print(dateTimeString);
       writeTemperature(logfile, 1, Probe01);
@@ -150,19 +183,7 @@ void loop() {
       Serial.println(filename);
     }
 
-    // Print to LCD
-
-    lcd.setCursor(0,0); //Start at character 0 on line 0
-    lcd.print("Hello World");
-
-    lcd.setCursor(0, 1);
-    displayTemperature(Probe01);  
-  
-    //lcd.setCursor(0,1); //Start at character 0 on line 1
-    //lcd.print("T2: ");
-    //displayTemperature(Probe02); 
-
-    delay(2000);  // delay before next write to SD card, adjust as required
+    delay(1000);  // delay before next write to SD card, adjust as required
 }
 
 /*-----( Declare User-written Functions )-----*/
@@ -177,14 +198,16 @@ void printTemperature(DeviceAddress deviceAddress) {
   }
 }// End printTemperature
 
+/*
 void displayTemperature(DeviceAddress deviceAddress) {
   float tempC = sensors.getTempC(deviceAddress);
    if (tempC == -127.00) { // Measurement failed or no device found
     lcd.print("Temperature Error");
    } else {
-    lcd.print(tempC);
+    lcd.print(tempC, 2);
    }
 }// End printTemperature
+*/
 
 void writeTemperature(File logfile, int probeNumber, DeviceAddress deviceAddress) {
   float tempC = sensors.getTempC(deviceAddress);
